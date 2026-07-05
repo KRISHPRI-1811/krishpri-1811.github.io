@@ -129,7 +129,7 @@ a:focus-visible {
 
 @media (max-width: 480px) {
   .topnav-links { gap: 14px; }
-  .avatar { width: 120px; height: 120px; }
+  .avatar { width: 170px; }
 }
 
 /* ---------------------------------------------
@@ -145,9 +145,8 @@ a:focus-visible {
 
 .avatar {
   flex: none;
-  width: 160px;
-  height: 160px;
-  border-radius: 50%;
+  width: 220px;
+  border-radius: 16px;
   background: var(--surface);
   border: 1px solid var(--border);
   display: flex;
@@ -163,8 +162,9 @@ a:focus-visible {
 
 .avatar img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
+  display: block;
+  object-fit: contain;
 }
 
 h1 {
