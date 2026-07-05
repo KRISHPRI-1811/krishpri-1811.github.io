@@ -15,7 +15,7 @@
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  --measure: 760px;
+  --measure: 960px;
 }
 
 * { box-sizing: border-box; }
