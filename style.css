@@ -133,19 +133,20 @@ a:focus-visible {
 }
 
 /* ---------------------------------------------
-   Hero (centered)
+   Hero (photo + text side by side)
 --------------------------------------------- */
 .hero {
-  text-align: center;
+  text-align: left;
   padding-top: 24px;
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 32px;
 }
 
 .avatar {
   flex: none;
-  width: 220px;
+  width: 240px;
   border-radius: 16px;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -157,7 +158,6 @@ a:focus-visible {
   letter-spacing: 0.02em;
   color: var(--text-dim);
   overflow: hidden;
-  margin-bottom: 24px;
 }
 
 .avatar img {
@@ -167,10 +167,16 @@ a:focus-visible {
   object-fit: contain;
 }
 
+.hero-text {
+  flex: 1;
+  min-width: 0;
+  padding-top: 4px;
+}
+
 h1 {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 38px;
+  font-size: 34px;
   letter-spacing: -0.01em;
   margin: 0 0 6px;
   color: var(--text);
@@ -186,7 +192,7 @@ h1 {
 }
 
 .hero-intro {
-  margin: 24px 0 0;
+  margin: 18px 0 0;
   font-size: 16px;
   line-height: 1.65;
   color: var(--text-dim);
@@ -195,6 +201,17 @@ h1 {
 
 .hero-intro a { color: var(--text); }
 .hero-intro a:hover { color: var(--accent); }
+
+@media (max-width: 600px) {
+  .hero {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .avatar { width: 200px; margin: 0 auto; }
+  .hero-text { padding-top: 0; }
+  .hero-intro { margin-left: auto; margin-right: auto; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
