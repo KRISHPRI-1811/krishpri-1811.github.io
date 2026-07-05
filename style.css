@@ -15,7 +15,7 @@
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  --measure: 640px;
+  --measure: 760px;
 }
 
 * { box-sizing: border-box; }
@@ -146,7 +146,7 @@ a:focus-visible {
 
 .avatar {
   flex: none;
-  width: 240px;
+  width: 200px;
   border-radius: 16px;
   background: var(--surface);
   border: 1px solid var(--border);
