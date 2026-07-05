@@ -2,14 +2,14 @@
    Tokens
 --------------------------------------------- */
 :root {
-  --bg: #16151a;
-  --surface: #1d1c22;
-  --border: #302e37;
-  --text: #eae7e0;
-  --text-dim: #9c98a3;
-  --text-faint: #6b6874;
-  --accent: #c9a15f;
-  --accent-dim: #8a7147;
+  --bg: #0c1a2e;
+  --surface: #142943;
+  --border: #26415f;
+  --text: #edf1f7;
+  --text-dim: #a6b3c7;
+  --text-faint: #6d7c93;
+  --accent: #b9a4e8;
+  --accent-dim: #8c78bd;
 
   --font-display: 'Fraunces', serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -36,7 +36,7 @@ body {
 
 ::selection {
   background: var(--accent-dim);
-  color: #16151a;
+  color: #0c1a2e;
 }
 
 a {
@@ -96,7 +96,7 @@ a:focus-visible {
   max-width: var(--measure);
   margin: 0 auto;
   padding: 20px 24px;
-  background: rgba(22, 21, 26, 0.82);
+  background: rgba(12, 26, 46, 0.85);
   backdrop-filter: blur(8px);
 }
 
@@ -144,8 +144,8 @@ a:focus-visible {
 
 .avatar {
   flex: none;
-  width: 72px;
-  height: 72px;
+  width: 104px;
+  height: 104px;
   border-radius: 50%;
   background: var(--surface);
   border: 1px solid var(--border);
