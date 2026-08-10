@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Capacitor: From Leyden Jar to Ferroelectric Ceramic — Prithvi Krishnaswamy</title>
+<meta name="description" content="A unified reference connecting capacitor theory, geometry, materials, manufacturing, and real-world non-ideal behavior into a single narrative.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+  <div class="grain"></div>
+
+  <nav class="topnav">
+    <a class="topnav-logo" href="../index.html#top">PK</a>
+    <div class="topnav-links">
+      <a href="../index.html#writing">← back to writing</a>
+    </div>
+  </nav>
+
+  <main class="article-wrap">
+
+    <header class="article-header">
+      <p class="role">engineering handoff document</p>
+      <h1 class="article-title">The Capacitor</h1>
+      <p class="article-subtitle">From Leyden Jar to Ferroelectric Ceramic — A Complete Story</p>
+      <p class="article-lead">A unified reference connecting capacitor theory, geometry, materials, manufacturing, and real-world non-ideal behavior into a single narrative.</p>
+
+      <table class="meta-table">
+        <tr><th>Purpose</th><td>Engineering reference / onboarding handoff covering capacitor theory, design, materials, manufacturers, and non-ideal behavior.</td></tr>
+        <tr><th>Audience</th><td>Hardware/electrical engineers, interns, and new team members needing a working reference on capacitor selection and behavior.</td></tr>
+        <tr><th>Status</th><td>Final — ready for handoff</td></tr>
+        <tr><th>Prepared</th><td>August 2026</td></tr>
+        <tr><th>Prerequisite</th><td>Basic circuit theory (Ohm's law, RC circuits)</td></tr>
+      </table>
+
+      <div class="toc">
+        <p class="toc-title">Table of contents</p>
+        <ol>
+          <li><a href="#executive-summary">Executive Summary</a></li>
+          <li><a href="#sec1">Where It Starts: A Jar That Stores "Electric Fire" (1745–1750s)</a></li>
+          <li><a href="#sec2">The Fundamental Equations</a></li>
+          <li><a href="#sec3">Charge/Discharge Waveforms, and Why They're Exponential</a></li>
+          <li><a href="#sec4">How They're Actually Built: Geometry Equations</a></li>
+          <li><a href="#sec5">History, Continued: From Jars to Nanometers</a></li>
+          <li><a href="#sec6">Material Choices: Why Each Part Is Made of What It's Made Of</a></li>
+          <li><a href="#sec7">The Capacitor Family Tree: Types, Origins, and Applications</a></li>
+          <li><a href="#sec8">Common Capacitor Values, and Why Those Specific Numbers</a></li>
+          <li><a href="#sec9">The Major Manufacturers, and What Each Is Known For</a></li>
+          <li><a href="#sec10">Why SimSurfing Exists — and the Nonlinear Voltage/Capacitance Relationship</a></li>
+          <li><a href="#sec11">Miller Capacitance — and Why It's Not Really "In" the Capacitor</a></li>
+          <li><a href="#sec12">Common Sources of Parasitic Capacitance</a></li>
+          <li><a href="#closing">Closing Summary: The Story in One Paragraph</a></li>
+        </ol>
+      </div>
+
+      <p class="article-lead" style="margin-top:28px;">This document is written as one continuous narrative rather than a set of disconnected reference sections — each section builds on the equations and ideas introduced before it, and later sections (materials, manufacturers, SimSurfing, Miller capacitance, parasitics) are explicit payoffs of the physics established early on. It's intended to be read start to finish once, then used as a lookup reference afterward.</p>
+    </header>
+
+    <article class="article-body">
+
+      <h2 id="executive-summary">Executive Summary</h2>
+      <p>This isn't a list of disconnected facts about capacitors. It's one continuous thread: a jar of water in 1745 forces a shape (cylindrical), that shape forces a geometric equation, that equation reveals a tradeoff (surface area vs. gap vs. material), that tradeoff drives 250 years of material science, that material science creates a <em>side effect</em> (nonlinear capacitance), and that side effect is exactly why every analog/power engineer who has ever sized a decoupling cap tells you to open Murata's SimSurfing tool before trusting a datasheet number. By the end, the seemingly separate topics — history, materials, capacitor types, common values, manufacturers, SimSurfing, Miller capacitance, and parasitics — all turn out to be the same story told at different points in time.</p>
+
+      <h2 id="sec1">1. Where It Starts: A Jar That Stores "Electric Fire" (1745–1750s)</h2>
+      <p>In October 1745, Ewald Georg von Kleist, and independently Pieter van Musschenbroek at Leiden University in 1746, discovered that a glass jar lined with metal foil on the inside and outside, filled partway with water and connected to a static generator, could store a shock-worthy amount of charge. This became the <strong>Leyden jar</strong> — the first practical capacitor, decades before anyone understood <em>why</em> it worked.</p>
+      <p>Benjamin Franklin, experimenting with Leyden jars around 1748, showed that the charge lived on the glass (the dielectric) rather than in the water or foil (the conductors) — the first real hint at what a capacitor actually is: <strong>two conductors separated by an insulator, storing energy in the electric field between them.</strong> Franklin also invented the "Franklin square," a flat stack of glass plates and lead sheets — the first <em>flat-plate</em> capacitor, and the ancestor of every modern film and ceramic capacitor.</p>
+      <p>Notice the shape of that original jar: a cylinder of glass with foil on both faces. That's not a coincidence for what comes next — it's the reason the <em>geometric</em> capacitance equations that engineers still use today come in two canonical families: <strong>parallel-plate</strong> and <strong>cylindrical/coaxial</strong>. We'll come back to this.</p>
+      <p>Michael Faraday (1830s) then quantified the idea: he showed that inserting different insulating materials between the plates <em>changed</em> how much charge could be stored for the same voltage. He called that ratio "capacity" — today's <strong>capacitance</strong>, measured in <strong>farads</strong>, named after him. This is the moment the story splits into two branches that will run in parallel for the rest of this report: (1) the <strong>geometry</strong> of the device, and (2) the <strong>material</strong> in the gap.</p>
+
+      <h2 id="sec2">2. The Fundamental Equations</h2>
+      <p>Everything else in this report is a consequence of three equations.</p>
+
+      <h3>2.1 The Defining Relationship</h3>
+      <p class="equation">Q = C · V</p>
+      <p>Charge stored (coulombs) is proportional to voltage across the plates, and the constant of proportionality is capacitance (farads). This is the <em>definition</em> of a capacitor — it is, structurally, a linear charge-storage element (Section 10 shows that real dielectrics quietly break this linearity).</p>
+
+      <h3>2.2 Current Is the Derivative of Stored Charge</h3>
+      <p>Since Q = CV, differentiating with respect to time:</p>
+      <p class="equation">I(t) = C · dV/dt</p>
+      <p>This single equation is why capacitors behave so differently from resistors: <strong>current depends on the rate of change of voltage, not the voltage itself.</strong> A capacitor with a constant DC voltage across it draws zero current ("fully charged"); a capacitor subjected to a fast-changing voltage looks like a low-impedance path. This is the entire reason capacitors are used for filtering, decoupling, and coupling.</p>
+
+      <h3>2.3 Energy Stored</h3>
+      <p class="equation">E = ½ · C · V²</p>
+      <p>Derived by integrating power (P = IV = CV·dV/dt) over the charging process. This is why capacitor voltage ratings matter so much for safety and physical size — energy scales with the <em>square</em> of voltage, so a 2x voltage rating requires 4x the stored energy capability for the same charge.</p>
+
+      <h3>2.4 Impedance in the Frequency Domain</h3>
+      <p class="equation">Z_C = 1 / (jωC) = 1 / (2πfC)</p>
+      <p>This is the practical, everyday form used in filter and decoupling design: impedance falls as frequency rises. It's also the reason a "0.1 µF decoupling cap" isn't a magic number — it's chosen so that Z_C is low at the switching frequencies of the digital logic it's protecting (Section 8).</p>
+
+      <h2 id="sec3">3. Charge/Discharge Waveforms, and Why They're Exponential</h2>
+      <p>Building the simplest possible real circuit — a battery, a resistor, and a capacitor in series (an <strong>RC circuit</strong>) — and closing the switch produces the classic curves every EE has seen on a lab scope:</p>
+      <p class="equation">Charging (voltage): V(t) = V_final · (1 − e^(−t/RC))
+Charging (current):  I(t) = (V_final / R) · e^(−t/RC)
+Discharging:         V(t) = V₀ · e^(−t/RC)
+                     I(t) = −(V₀/R) · e^(−t/RC)</p>
+      <p><strong>Why exponential, specifically?</strong> Combine Ohm's law and the capacitor's own I–V relationship. In a charging RC loop:</p>
+      <p class="equation">V_source = I·R + V_C
+I = C · dV_C/dt</p>
+      <p>Substitute and the result is a first-order linear differential equation:</p>
+      <p class="equation">RC · dV_C/dt + V_C = V_source</p>
+      <p>The solution to <em>any</em> equation of this form (rate of change proportional to the remaining "distance" from equilibrium) is an exponential — the same math that governs radioactive decay, Newton's cooling law, and RC low-pass filters. It shows up because the capacitor's "demand" for current is proportional to how far it still is from its final voltage: far from equilibrium → large dV/dt → large current; near equilibrium → the charging rate tapers to nothing. That feedback loop <em>is</em> the exponential.</p>
+      <p>The <strong>time constant τ = RC</strong> is the single number that describes the whole curve: after 1τ the circuit is at 63.2% of final value, after 5τ it's considered "fully" charged (99.3%). This is why datasheets and design guides talk in multiples of τ rather than absolute time — it's a scale-invariant way to describe any RC circuit regardless of the actual R and C values.</p>
+      <p><strong>Current leads voltage by 90°</strong> in an ideal AC-driven capacitor — this falls directly out of I = C·dV/dt: if V(t) = V_pk·sin(ωt), then I(t) = ωC·V_pk·cos(ωt), and cosine leads sine by a quarter cycle. This phase relationship is why capacitors provide reactive (not real) power in AC circuits, and it's the seed of power-factor correction — an entire industry built around counteracting this same 90° phase shift caused by inductive loads, using capacitor banks.</p>
+
+      <h2 id="sec4">4. How They're Actually Built: Geometry Equations</h2>
+      <p>Recall the Leyden jar's cylindrical shape versus Franklin's flat plates — real capacitor design still splits along exactly that line.</p>
+
+      <h3>4.1 Parallel Plate (the "flat" family — ceramic, film, mica caps)</h3>
+      <p class="equation">C = ε₀ · εᵣ · A / d</p>
+      <ul>
+        <li>ε₀ = permittivity of free space (8.854 × 10⁻¹² F/m)</li>
+        <li>εᵣ = relative permittivity (dielectric constant) of the insulating material</li>
+        <li>A = overlapping plate area</li>
+        <li>d = plate separation (dielectric thickness)</li>
+      </ul>
+      <p>This one equation is the DNA of capacitor design: to get <strong>more capacitance</strong> you either increase area, decrease the gap, or increase εᵣ. Since you can't make a device infinitely large or the dielectric infinitely thin (dielectric breakdown, mechanical fragility), the entire history of capacitor miniaturization (Section 5) is a history of chasing higher εᵣ materials and thinner reliable dielectric layers, plus clever geometric tricks (Section 4.3).</p>
+
+      <h3>4.2 Cylindrical / Coaxial (the "rolled" and "wire" family — electrolytics, coax cable, some film caps)</h3>
+      <p class="equation">C = 2π · ε₀ · εᵣ · L / ln(b/a)</p>
+      <ul>
+        <li>L = length of the cylinder (overlap length of the electrodes)</li>
+        <li>a = radius of the inner conductor</li>
+        <li>b = radius of the outer conductor</li>
+        <li>ln(b/a) = natural log of the radius ratio</li>
+      </ul>
+      <p>This is the formula for coaxial cable capacitance-per-length and for a cylindrical capacitor, and it also governs the <strong>stray capacitance of a wire or trace over a ground plane</strong> (with b/a reinterpreted as height ratios) — directly relevant again in Section 12 on parasitics. Notice the symmetry with the parallel-plate case: capacitance still scales with the "facing area" (length L times circumference) and inversely with the effective separation (ln(b/a), a logarithmic stand-in for the gap because the field lines fan out radially instead of running straight across).</p>
+
+      <h3>4.3 Why Real Capacitors Are "Rolled" or "Layered" Instead of Two Flat Plates</h3>
+      <p>A single pair of flat plates big enough to be useful would be enormous. The practical answer, invented not long after Franklin, is to <strong>either roll two long metal foils with a thin dielectric film between them into a cylinder</strong> (film and some electrolytic capacitors — literally applying the cylindrical geometry from 4.2 to a rolled version of the parallel-plate structure from 4.1), <strong>or stack many thin layers</strong> (Multi-Layer Ceramic Capacitors, MLCCs) so dozens to hundreds of parallel plates are electrically connected together, multiplying the effective area A in the same package footprint:</p>
+      <p class="equation">C_MLCC ≈ (n − 1) · ε₀ · εᵣ · A_layer / d_layer</p>
+      <p>where n is the number of dielectric layers. This is why modern MLCCs can pack microfarads into a 0402 package — not by cheating the physics, but by stacking the parallel-plate equation dozens of times in the z-axis, each layer only microns thick.</p>
+
+      <h2 id="sec5">5. History, Continued: From Jars to Nanometers</h2>
+      <ul>
+        <li><strong>1745–46</strong>: Leyden jar (von Kleist, van Musschenbroek) — first capacitor, cylindrical, glass dielectric, empirical only.</li>
+        <li><strong>1748</strong>: Franklin's "Franklin square" — flat glass-and-lead-sheet stack; proves charge lives in the dielectric.</li>
+        <li><strong>1830s</strong>: Faraday formalizes capacitance and the effect of dielectric material — the birth of εᵣ as a design variable (Section 4.1).</li>
+        <li><strong>Late 1800s</strong>: Paraffin-impregnated paper capacitors become the workhorse of early telegraph/telephone and radio circuits — cheap, rollable, but bulky and prone to moisture ingress.</li>
+        <li><strong>1896</strong>: Charles Pollak invents the modern <strong>electrolytic capacitor</strong> — an anodized aluminum oxide layer only nanometers thick acting as d in the parallel-plate equation, still the dominant technology for bulk energy storage in power supplies today.</li>
+        <li><strong>1920s–1950s</strong>: Mica and ceramic capacitors mature for RF and precision use, prized for stability rather than density.</li>
+        <li><strong>1950s–60s</strong>: Tantalum electrolytic capacitors commercialized (Bell Labs/Sprague) — tantalum pentoxide dielectric is thinner and more stable than aluminum oxide, enabling smaller, more reliable parts for military and aerospace electronics.</li>
+        <li><strong>1960s–70s</strong>: The <strong>multilayer ceramic capacitor (MLCC)</strong> is developed, stacking thin dielectric layers per Section 4.3 — the true miniaturization inflection point.</li>
+        <li><strong>1980s–2000s</strong>: High-dielectric-constant "Class II" ceramics (barium titanate-based X7R, X5R) push εᵣ from the hundreds into the thousands, enabling multi-microfarad MLCCs in millimeter-scale packages — and, as a side effect, introducing the nonlinear voltage behavior in Section 10. <strong>Conductive polymer</strong> electrolytic and tantalum capacitors also emerge.</li>
+        <li><strong>Today</strong>: MLCCs, film, electrolytic (aluminum + polymer), and tantalum/niobium capacitors coexist because none wins on every axis (voltage rating, capacitance density, ESR, temperature stability, cost, failure mode).</li>
+      </ul>
+
+      <h2 id="sec6">6. Material Choices: Why Each Part Is Made of What It's Made Of</h2>
+      <p>Every material choice below is a direct answer to the parallel-plate equation C = ε₀εᵣA/d: engineers are always trading off εᵣ, achievable d, voltage breakdown strength, temperature stability, and cost.</p>
+
+      <h3>6.1 Dielectric Materials</h3>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <tr><th>Dielectric</th><th>εᵣ (approx.)</th><th>Why it's chosen</th></tr>
+          <tr><td>Air / vacuum</td><td>1</td><td>Reference baseline; used in variable/trimmer caps and high-voltage/RF caps where losses must be near zero.</td></tr>
+          <tr><td>Mica</td><td>6–8</td><td>Extremely stable with temperature and voltage, very low loss — used where precision matters more than density.</td></tr>
+          <tr><td>Polypropylene / polyester (film)</td><td>2–3.3</td><td>Low loss, self-healing, excellent for AC and pulse applications like snubbers and motor-run caps.</td></tr>
+          <tr><td>Paper (impregnated)</td><td>~2–6</td><td>Historic; still used in some high-voltage AC caps; cheap and rollable.</td></tr>
+          <tr><td>Class I ceramic (C0G/NP0)</td><td>5–90</td><td>Nearly zero voltage or temperature coefficient — "linear" capacitors for timing, filters, resonant circuits.</td></tr>
+          <tr><td>Class II ceramic (X7R, X5R — barium titanate)</td><td>2,000–20,000+</td><td>Enormous εᵣ from ferroelectric domain polarization — dominant choice for bulk/decoupling MLCCs, but causes the nonlinear behavior in Section 10.</td></tr>
+          <tr><td>Class III ceramic (Y5V, Z5U)</td><td>Even higher, poor stability</td><td>Maximum density, minimum precision/stability — bargain bulk decoupling only.</td></tr>
+          <tr><td>Aluminum oxide (Al₂O₃, anodized)</td><td>~9, nanometers thick</td><td>Extreme thinness (d) gives huge C in small volume; used in wet/solid aluminum electrolytics.</td></tr>
+          <tr><td>Tantalum pentoxide (Ta₂O₅)</td><td>~26, nanometers thick</td><td>Higher εᵣ and more stable oxide than alumina → smaller, more reliable parts, at higher cost.</td></tr>
+          <tr><td>Conductive polymer (e.g., PEDOT)</td><td>N/A (replaces electrolyte)</td><td>Drastically lowers ESR and improves failure mode vs. liquid electrolyte.</td></tr>
+        </table>
+      </div>
+
+      <h3>6.2 Conductor Materials</h3>
+      <ul>
+        <li><strong>Aluminum foil</strong> — electrolytic capacitors: cheap, self-anodizing, deeply etched to increase effective surface area (boosting A well beyond the physical footprint).</li>
+        <li><strong>Tantalum powder, sintered into a porous pellet</strong> — tantalum capacitors: sintering creates enormous internal surface area in a tiny volume, then anodized to grow the Ta₂O₅ dielectric directly on it.</li>
+        <li><strong>Nickel or silver-palladium electrodes</strong> — MLCCs: nickel is now dominant (base-metal electrode technology) for cost, while surviving the high-temperature co-firing process.</li>
+        <li><strong>Aluminum or zinc metallization on plastic film</strong> — film capacitors: an extremely thin vapor-deposited metal layer gives film caps their self-healing property.</li>
+        <li><strong>Copper</strong> — used for external terminations/leads across almost all types, for conductivity, solderability, and cost.</li>
+      </ul>
+
+      <h2 id="sec7">7. The Capacitor Family Tree: Types, Origins, and Applications</h2>
+      <p>Sections 4–6 established that every capacitor is a specific answer to "how do I get area, gap, and permittivity into a usable, manufacturable shape." This section is the payoff: each <em>type</em> below is a distinct answer to that question, invented at a different point in the Section 5 timeline, using a different combination of the Section 6 materials — which directly explains what each type is good and bad at today.</p>
+
+      <h3>7.1 Ceramic Capacitors</h3>
+      <p><strong>Discovered/developed:</strong> Ceramic dielectrics emerged in the 1920s–1930s (titanium dioxide-based, temperature-compensating types), with the inflection point being the discovery that <strong>barium titanate</strong> (a ferroelectric perovskite, first studied around 1941–1943 independently in the US, USSR, and Japan) had an enormous dielectric constant compared to anything known before. The <strong>multilayer</strong> version (MLCC) was developed through the 1960s–70s and is now the most-manufactured electronic component on Earth by volume.</p>
+      <p><strong>Why they're used:</strong> Ceramics span the widest range of any family because "ceramic" isn't one material — it's the Class I (C0G/NP0) vs. Class II/III (X7R, X5R, Y5V) split from Section 6.1. Class I gives near-zero drift for precision timing/RF; Class II/III gives extreme volumetric density for bulk decoupling.</p>
+      <p><strong>Where you'll find them:</strong> Class I — oscillators, RF filters, tank circuits, timing references. Class II/III — power-supply decoupling on every digital IC, bulk filtering in compact power electronics.</p>
+      <p><strong>Tradeoffs:</strong> No polarity, very low ESR, excellent high-frequency behavior; but brittle (can crack under mechanical/thermal stress) and, for Class II/III, subject to the nonlinear voltage/temperature behavior in Section 10.</p>
+
+      <h3>7.2 Electrolytic Capacitors (Aluminum)</h3>
+      <p><strong>Discovered/developed:</strong> Invented by Charles Pollak in 1896 (Section 5), based on anodizing aluminum in an electrolyte to grow an extremely thin, self-healing oxide layer. Commercialized broadly through the early-to-mid 1900s as radio and later television electronics needed larger amounts of capacitance than paper or mica could provide.</p>
+      <p><strong>Why they're used:</strong> The oxide layer is nanometers thick and the foil is deeply etched to multiply effective surface area, so C = ε₀εᵣA/d gives enormous capacitance (hundreds to tens of thousands of µF) per dollar and per cubic centimeter.</p>
+      <p><strong>Where you'll find them:</strong> Bulk energy storage and ripple filtering on power supply DC rails, audio coupling, motor start/run circuits — anywhere large capacitance is needed and polarization/higher ESR/finite wear-out life are acceptable.</p>
+      <p><strong>Tradeoffs:</strong> Highest capacitance density for the money, but polarized, higher ESR/ESL than film or ceramic, and a genuine end-of-life wear-out mechanism (electrolyte dries out over years, especially at high temperature — the root cause of the early-2000s "capacitor plague," Section 9).</p>
+
+      <h3>7.3 Tantalum Capacitors</h3>
+      <p><strong>Discovered/developed:</strong> Commercialized by Bell Labs and Sprague in the 1950s to solve reliability and size limitations of wet aluminum electrolytics for military and telecom equipment — sintered tantalum powder anodized to grow a Ta₂O₅ dielectric.</p>
+      <p><strong>Why they're used:</strong> Higher, more stable permittivity than aluminum oxide, plus a sintered-powder pellet construction with enormous internal surface area in a small, robust package.</p>
+      <p><strong>Where you'll find them:</strong> Space-constrained, reliability-critical designs — military, aerospace, medical, and high-end consumer electronics.</p>
+      <p><strong>Tradeoffs:</strong> More expensive than aluminum electrolytics, polarized, and prone to a catastrophic (rather than gentle) failure mode if reverse-biased, over-voltaged, or subjected to high inrush current — hence a common design practice of derating to ~50% of rated voltage. Modern <strong>polymer tantalum</strong> capacitors largely fix the harsh failure mode and lower ESR further.</p>
+
+      <h3>7.4 Film Capacitors</h3>
+      <p><strong>Discovered/developed:</strong> Evolved directly out of paper capacitors (Section 7.6) once thin plastic films became available in the mid-20th century, offering more consistent thickness and far better moisture resistance. The metallized (self-healing) construction became standard by the 1960s–70s.</p>
+      <p><strong>Why they're used as a family:</strong> Rolled or stacked film-and-foil (or metallized film) construction directly applies the cylindrical geometry from Section 4.2; the specific plastic tunes the tradeoff between temperature stability, loss, moisture resistance, and cost. Film capacitors are prized for extremely low loss, good stability, no polarity, and self-healing behavior under overvoltage.</p>
+      <p>Different film chemistries exist because no single plastic wins on every axis:</p>
+      <ul>
+        <li><strong>Polypropylene (PP)</strong> — the most common film dielectric today; low dielectric loss, very good stability, good self-healing under voltage stress. Used in AC applications: motor-run capacitors, power-factor correction, snubbers, and high-quality audio crossover/coupling capacitors.</li>
+        <li><strong>Polyester / PET ("Mylar")</strong> — DuPont's trademarked polyester film, commercialized in the 1950s; low cost and decent stability, but higher dielectric absorption and slightly worse temperature/frequency behavior than PP. Used in general-purpose coupling/decoupling and timing circuits.</li>
+        <li><strong>Polyphenylene sulfide (PPS)</strong> — a high-performance engineering plastic; extremely stable capacitance over a wide temperature range and very low dielectric absorption, but more expensive and typically only available in smaller values. Used in precision analog circuits (sample-and-hold, integrators, timing references).</li>
+        <li><strong>PTFE (Teflon)</strong> — the highest-performing and most expensive common film dielectric: extremely low loss, excellent stability across an unusually wide temperature range, very high insulation resistance. Used in demanding RF, aerospace, and high-reliability applications.</li>
+        <li><strong>Polycarbonate (PC)</strong> — popular from the 1970s–90s for stability and moisture resistance, historically used in precision timing; largely phased out since the late 1990s/2000s once environmental regulations restricted key solvents and PPS/PP became cheaper and equally capable. Still occasionally found in legacy/replacement contexts.</li>
+      </ul>
+
+      <h3>7.5 Mica Capacitors</h3>
+      <p><strong>Discovered/developed:</strong> Mica has been used as a dielectric since the early 20th century — a naturally occurring mineral that cleaves into extremely thin, flat, mechanically stable layers, a natural fit for the flat-plate geometry from Section 4.1.</p>
+      <p><strong>Why they're used:</strong> Exceptionally stable with temperature and applied voltage (rivaling or beating C0G ceramic), extremely low loss, and very high working voltages relative to size, but expensive and only practical for relatively small capacitance values.</p>
+      <p><strong>Where you'll find them:</strong> RF and microwave circuits, resonant tank circuits, high-voltage/high-frequency filters, and precision applications needing rock-solid capacitance over time and temperature — largely superseded by C0G/NP0 ceramic for lower-cost applications, but still specified in high-power RF and legacy equipment.</p>
+
+      <h3>7.6 Paper Capacitors</h3>
+      <p><strong>Discovered/developed:</strong> Among the earliest practical dielectrics after the Leyden jar and mica, paper (impregnated with wax, oil, or resin) became the dominant capacitor type in early-to-mid 20th century radio, telephone, and industrial electronics, following naturally from the rolled/cylindrical construction in Section 4.2.</p>
+      <p><strong>Why they were used, and why they've mostly disappeared:</strong> Cheap and easy to manufacture at scale, but hygroscopic (absorbs moisture, degrading insulation resistance over time) and bulky for its capacitance compared to film. Once reliable thin plastic films became available (Section 7.4), film capacitors replaced paper in almost every application. Modern "paper" capacitors are largely oil-impregnated paper/film hybrids used only in niche high-voltage AC applications; pure paper types are now mostly a historical/vintage-equipment topic.</p>
+
+      <h3>7.7 Supercapacitors (Electric Double-Layer Capacitors / Ultracapacitors)</h3>
+      <p><strong>Discovered/developed:</strong> The electric double-layer effect was first observed by General Electric engineers in 1957; the modern supercapacitor concept was patented by Standard Oil of Ohio (SOHIO) in 1966. NEC commercialized the first practical devices under the name "supercapacitor" in 1978 for memory backup. Modern high-power supercapacitors matured through the 1990s–2000s as hybrid and electric vehicle applications drove demand for high power density storage.</p>
+      <p><strong>Why they're fundamentally different:</strong> A supercapacitor doesn't use the solid-dielectric mechanism from Section 4.1 at all — it stores charge electrostatically in an <strong>electric double layer</strong> at the interface between a porous, extremely high-surface-area activated-carbon electrode and a liquid or gel electrolyte, with separation distances on the order of a single molecule (d shrinks to near-atomic scale) combined with A in the thousands of square meters per gram of electrode. Plugging near-atomic d and enormous A into C = ε₀εᵣA/d explains capacitances of farads to thousands of farads — unreachable by any dielectric-based capacitor in this report.</p>
+      <p><strong>Where you'll find them:</strong> Applications needing very fast charge/discharge and very high cycle life (millions of cycles vs. hundreds to a few thousand for batteries) where energy density matters less than power density and lifespan — regenerative braking energy capture, memory/RTC backup power, burst-power assistance in hybrid vehicles and grid stabilization, and rapid-charge power tools.</p>
+      <p><strong>Tradeoffs:</strong> Far lower energy density than batteries, higher self-discharge rate than most true capacitors, and genuinely blurs the line between "capacitor" and "battery" — sometimes classified as a distinct energy-storage category.</p>
+
+      <h3>7.8 Quick Reference: Matching the Type to the Job</h3>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <tr><th>Type</th><th>Best for</th><th>Avoid when you need</th></tr>
+          <tr><td>Ceramic (Class I)</td><td>Precision timing, RF, stable filters</td><td>High capacitance in small size</td></tr>
+          <tr><td>Ceramic (Class II/III)</td><td>Compact bulk decoupling, small size</td><td>Stable capacitance under bias/temp (Sec. 10)</td></tr>
+          <tr><td>Aluminum electrolytic</td><td>Cheap bulk energy storage/ripple filtering</td><td>Long unattended life at high temp, low ESR at high freq</td></tr>
+          <tr><td>Tantalum (incl. polymer)</td><td>Small, stable, reliable cap in tight spaces</td><td>Lowest cost, tolerance of reverse V/inrush abuse</td></tr>
+          <tr><td>Film — PP</td><td>AC/power, audio, self-healing under stress</td><td>Absolute smallest size</td></tr>
+          <tr><td>Film — PET/Mylar</td><td>General-purpose, low-cost coupling/timing</td><td>Best-in-class stability</td></tr>
+          <tr><td>Film — PPS</td><td>Precision analog at moderate cost</td><td>Very large capacitance values</td></tr>
+          <tr><td>Film — PTFE</td><td>Extreme temperature/RF/aerospace reliability</td><td>Cost-sensitive designs</td></tr>
+          <tr><td>Film — Polycarbonate</td><td>Legacy/replacement precision parts</td><td>New designs (largely discontinued)</td></tr>
+          <tr><td>Mica</td><td>Ultra-stable RF/high-voltage precision</td><td>Large capacitance or low cost</td></tr>
+          <tr><td>Paper (oil-impregnated)</td><td>Niche high-voltage AC, legacy equipment</td><td>New precision or compact designs</td></tr>
+          <tr><td>Supercapacitor</td><td>Fast burst power, huge cycle life</td><td>High energy density, low self-discharge</td></tr>
+        </table>
+      </div>
+
+      <h2 id="sec8">8. Common Capacitor Values, and Why Those Specific Numbers</h2>
+      <p>If you've ever noticed that capacitors come in values like 1, 2.2, 4.7, 10, 22, 47, 100... and never "in between," that's not arbitrary — it's the <strong>E-series of preferred numbers</strong> (IEC 60063), the same standard used for resistors.</p>
+      <p>The logic: for a component with a given tolerance, you want the smallest set of values that, accounting for the tolerance band, has no meaningful gaps or overlaps across a decade (1 to 10). For ±20% tolerance parts, <strong>E6</strong> (1.0, 1.5, 2.2, 3.3, 4.7, 6.8) is enough — each value's tolerance band just touches the next one's. Tighter-tolerance parts get more steps per decade: E12 (±10%), E24 (±5%), E96 (±1%), etc. The step multiplier is approximately the 6th, 12th, or 24th root of 10, which is why the numbers look "random" but are actually geometrically spaced.</p>
+      <p>For capacitors specifically, a second layer of "common-ness" comes from <strong>application-driven values</strong>:</p>
+      <ul>
+        <li><strong>0.1 µF (100 nF)</strong> is the near-universal digital logic decoupling value — chosen because Z_C for 0.1 µF stays low enough through the MHz range where switching noise lives, while the physical size (0402/0603 MLCC) is small enough to place right at every IC power pin. A "good enough for almost everything" compromise, not a fundamental constant.</li>
+        <li><strong>10 µF, 22 µF, 47 µF, 100 µF+ electrolytics/tantalums</strong> are common bulk-storage values sized around typical switching regulator ripple-current and hold-up-time requirements.</li>
+        <li><strong>Small-value NP0/C0G caps (1 pF–1 nF)</strong> follow the E12/E24 series tightly because they're used in precision timing and filter circuits where exact ratios matter.</li>
+      </ul>
+      <p>So "common values" exist for two overlapping reasons: (1) the E-series mathematics of covering a decade with minimum redundant parts for a given tolerance, and (2) decades of engineers converging on the same handful of values for the same recurring jobs.</p>
+
+      <h2 id="sec9">9. The Major Manufacturers, and What Each Is Known For</h2>
+      <ul>
+        <li><strong>Murata (Japan)</strong> — the world's largest MLCC manufacturer by volume; known for extreme miniaturization and for <strong>SimSurfing</strong>, the free design tool discussed in Section 10 — arguably as influential as their parts because it shaped how the industry thinks about MLCC selection.</li>
+        <li><strong>TDK (Japan)</strong> — Murata's closest MLCC rival; also strong in ferrite/inductors and, since acquiring EPCOS, in film and aluminum electrolytic capacitors.</li>
+        <li><strong>Samsung Electro-Mechanics (South Korea)</strong> — a major MLCC supplier, especially strong in high-capacitance/automotive-grade parts.</li>
+        <li><strong>KEMET (USA, now part of Yageo)</strong> — historically one of the biggest names in <strong>tantalum</strong> capacitors, also strong in film and MLCC.</li>
+        <li><strong>AVX (USA, part of Kyocera)</strong> — a major tantalum and MLCC player, known in RF/microwave and mil-aero for high-reliability parts.</li>
+        <li><strong>Vishay (USA)</strong> — broad-line passive component maker; well known for <strong>film</strong>, <strong>tantalum</strong>, and precision resistive/capacitive products.</li>
+        <li><strong>Panasonic (Japan)</strong> — a leader in <strong>aluminum electrolytic and polymer capacitors</strong>, especially low-ESR polymer types widely used in consumer electronics ("OS-CON" is an industry benchmark).</li>
+        <li><strong>Nichicon and Rubycon (Japan)</strong> — specialists in <strong>aluminum electrolytic capacitors</strong>; Rubycon became widely known after the early-2000s "capacitor plague" (caused by faulty electrolyte formulas from a different, smaller manufacturer) made electrolytic capacitor quality a mainstream concern.</li>
+        <li><strong>WIMA (Germany)</strong> — a well-regarded specialist in <strong>film capacitors</strong>, particularly for audio and precision analog applications.</li>
+        <li><strong>Yageo (Taiwan)</strong> — one of the largest passive component manufacturers overall by volume, and, through acquiring KEMET, now spans tantalum and film too.</li>
+      </ul>
+      <p>The pattern across this list: almost no company dominates <em>every</em> capacitor family, because (Section 6) each dielectric/conductor combination is a different materials-science and manufacturing-process problem. Companies specialize where their process expertise (ceramic firing, foil anodizing, film metallization, tantalum sintering) gives them an edge.</p>
+
+      <h2 id="sec10">10. Why SimSurfing Exists — and the Nonlinear Voltage/Capacitance Relationship</h2>
+      <p>Here's where the whole story closes the loop back to Section 6's material choices.</p>
+      <p><strong>The problem SimSurfing solves:</strong> A "10 µF" X7R or X5R MLCC does <strong>not</strong> actually measure 10 µF once real operating DC voltage is applied — it can lose 40–80% of its nameplate capacitance at rated voltage, and that loss also depends on temperature and AC ripple riding on top of the DC bias. Since datasheets historically gave only a single nominal value at 0V/25°C, engineers who trusted the printed number routinely under-provisioned their designs. Murata built <strong>SimSurfing</strong> as a free web tool that lets an engineer pull up any specific part number and see interactive graphs of capacitance vs. DC bias voltage, vs. AC voltage, vs. temperature, vs. frequency (impedance/ESR), and even download SPICE models that bake this behavior in — which is exactly why it's recommended everywhere: it turns a misleading nameplate number into the real operating curve needed for accurate design.</p>
+      <p><strong>Why the nonlinearity happens (the physics):</strong> This traces back to Section 6.1 — the <em>reason</em> Class II dielectrics like X7R/X5R achieve their huge εᵣ (thousands, vs. tens for Class I) is that they're made from <strong>ferroelectric materials</strong>, almost always <strong>barium titanate (BaTiO₃)</strong>, a perovskite-structured ceramic. Below its Curie temperature, barium titanate's crystal lattice has a slight asymmetry that creates spontaneous electric dipoles, and these dipoles organize into "domains." An externally applied field can rotate/align these domains — this alignment is exactly what gives the material its enormous effective permittivity, because domain-wall motion contributes a large extra polarization response on top of normal electronic/ionic polarization.</p>
+      <p>But that mechanism has a ceiling: as a stronger DC bias field is applied, more domains become fully aligned/pinned in the field direction, leaving progressively less "room" for the field to induce additional polarization. The differential permittivity (what capacitance actually measures — a small-signal response superimposed on the DC bias) drops as the domains saturate, the same physical family of behavior as magnetic saturation in ferrite inductor cores, just the electric-dipole analog. <strong>Class I dielectrics (C0G/NP0)</strong> are <em>not</em> ferroelectric — their lower-but-stable εᵣ comes from ordinary ionic/electronic polarization with no domain structure to saturate, which is exactly why SimSurfing shows them as flat, bias-independent lines while X5R/X7R/Y5V show the classic curved "capacitance falls off a cliff" plot. The nonlinearity isn't a flaw — it's the unavoidable side effect of the very mechanism that makes high-density MLCCs possible in the first place.</p>
+
+      <h2 id="sec11">11. Miller Capacitance — and Why It's Not Really "In" the Capacitor</h2>
+      <p>This one trips people up because it sounds like a type of capacitor, but it's actually a <strong>circuit-level amplification effect on an already-existing small parasitic capacitance</strong>, not a property of any physical capacitor part.</p>
+      <p><strong>The setup:</strong> in an inverting voltage-gain stage (a BJT or MOSFET common-emitter/common-source amplifier), there is always some small parasitic capacitance C_gd (or C_bc) directly bridging the output back to the input — a genuine but tiny device parasitic (gate-to-drain or base-to-collector overlap capacitance, Section 12).</p>
+      <p><strong>The Miller effect:</strong> Because the stage inverts and amplifies (gain −A), a small voltage change at the input produces a much larger, opposite-polarity voltage change at the output. The current that has to flow through that small bridging capacitor to charge it is therefore much larger than its physical size alone would suggest, because it has to supply both the input-side swing and the amplified output-side swing. Miller's theorem shows that, from the input's perspective, this feedback capacitor behaves as if it were a capacitor of value:</p>
+      <p class="equation">C_miller = C_gd · (1 + A)</p>
+      <p>sitting directly from the input node to ground. If a stage has a gain of 100 and a real C_gd of only 1 pF, the input sees an effective 101 pF — two orders of magnitude larger than the physical capacitance actually is. This dramatically reduces the amplifier's high-frequency bandwidth (often the single biggest bandwidth limiter in an uncompensated gain stage) and is foundational to both analog amplifier design and dominant-pole frequency compensation (deliberately adding a real capacitor across the feedback path to use the Miller effect on purpose).</p>
+      <p>So, directly: no discrete capacitor "has" Miller capacitance. Miller capacitance is what a small real parasitic capacitance (Section 12) appears to be once viewed through a gain stage. Remove the gain, and it goes back to being just the tiny physical C_gd.</p>
+
+      <h2 id="sec12">12. Common Sources of Parasitic Capacitance</h2>
+      <p>This closes the story by tying the geometry equations from Section 4 to real, unwanted structures in every circuit:</p>
+      <ul>
+        <li><strong>Trace-to-plane / trace-to-trace capacitance on a PCB</strong> — any two conductors separated by an insulator form a capacitor whether wanted or not; a signal trace over a ground plane is the cylindrical/microstrip analog of Section 4.2's equation, with the dielectric being the PCB substrate (FR4, etc.).</li>
+        <li><strong>Semiconductor junction capacitance</strong> — every p-n junction (diodes, BJT base-collector/base-emitter junctions, MOSFET drain/source-to-body junctions) has a depletion region acting as the dielectric gap in a parallel-plate-like structure; this capacitance changes with reverse bias voltage (varactor diodes exploit this deliberately) — a semiconductor cousin of the ceramic voltage-nonlinearity in Section 10, though the mechanism (depletion width modulation) differs from ferroelectric domain saturation.</li>
+        <li><strong>MOSFET/BJT interelectrode capacitances (C_gs, C_gd, C_ds; C_be, C_bc)</strong> — physical overlap of gate/base metal over channel/junction regions; C_gd/C_bc is specifically the one amplified into Miller capacitance (Section 11).</li>
+        <li><strong>Winding-to-winding (interwinding) capacitance in transformers and inductors</strong> — adjacent turns of wire at slightly different potentials, separated only by insulation, form a distributed network of tiny capacitors that limits high-frequency performance and can create unwanted coupling between primary and secondary windings.</li>
+        <li><strong>Lead and package (parasitic) capacitance and inductance</strong> — even the metal leads and internal bond wires of a "real" capacitor or any other component have their own small stray capacitance/inductance, which is why every real capacitor's true SPICE model is an R-L-C network, not a pure C (part of what SimSurfing's downloadable SPICE models capture).</li>
+        <li><strong>Cable and connector capacitance</strong> — the coaxial equation from Section 4.2 applies directly: any shielded or twisted cable has a real, specified capacitance-per-meter that matters for high-speed signal integrity and can act as an unwanted low-pass filter on fast edges.</li>
+        <li><strong>Human body / probe capacitance</strong> — even a hand or an oscilloscope probe tip near a high-impedance circuit node forms a small parasitic capacitance to that node, why sensitive high-impedance measurements are easily disturbed just by touching a board (the same physics used deliberately in capacitive touchscreens).</li>
+      </ul>
+
+      <h2 id="closing">Closing Summary: The Story in One Paragraph</h2>
+      <p>A jar of water and foil in 1745 was a crude capacitor before anyone had the equations to describe it; Faraday's work on dielectrics gave engineers their central tradeoff (area, gap, permittivity), which produced two geometric families — flat-plate and cylindrical — that every capacitor built since is a variation of. Every named <em>type</em> in this report — ceramic, electrolytic, tantalum, the film chemistries, mica, paper, even the double-layer supercapacitor — is simply a different point chosen along that same area/gap/permittivity tradeoff, at a different moment in the materials-science timeline, which is why no single type "wins": each is optimized for a different corner of the same equation. The chase for smaller, higher-capacitance parts pushed materials toward ferroelectric ceramics and anodized-oxide electrolytics, both of which get their high permittivity from mechanisms (domain alignment, ultra-thin self-formed oxide) that have real physical limits — which is precisely why capacitance sags nonlinearly with applied voltage, and precisely why Murata built SimSurfing to make that real-world behavior visible instead of hidden behind a single nameplate number. Meanwhile, those same tiny, real parasitic capacitances — junction capacitance, gate-drain overlap, trace-to-plane coupling — show up everywhere unintentionally, and when one happens to bridge the input and output of a gain stage, simple feedback math (the Miller effect) makes it look far larger than it physically is. Every section of this report is really just that one 280-year-old tradeoff — area, gap, and material — playing out in a different context.</p>
+
+    </article>
+
+    <footer class="article-footer">
+      <p>Written by <a href="../index.html#top">Prithvi Krishnaswamy</a> · August 2026</p>
+    </footer>
+
+  </main>
+
+</body>
+</html>
