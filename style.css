@@ -129,7 +129,7 @@ a:focus-visible {
 
 @media (max-width: 480px) {
   .topnav-links { gap: 14px; }
-  .avatar { width: 170px; }
+  .avatar { width: 220px; }
 }
 
 /* ---------------------------------------------
@@ -146,7 +146,7 @@ a:focus-visible {
 
 .avatar {
   flex: none;
-  width: 200px;
+  width: 280px;
   border-radius: 16px;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -208,7 +208,7 @@ h1 {
     align-items: center;
     text-align: center;
   }
-  .avatar { width: 200px; margin: 0 auto; }
+  .avatar { width: 260px; margin: 0 auto; }
   .hero-text { padding-top: 0; }
   .hero-intro { margin-left: auto; margin-right: auto; }
 }
