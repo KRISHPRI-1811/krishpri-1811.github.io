@@ -15,7 +15,7 @@
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  --measure: 960px;
+  --measure: 1080px;
 }
 
 * { box-sizing: border-box; }
@@ -129,7 +129,6 @@ a:focus-visible {
 
 @media (max-width: 480px) {
   .topnav-links { gap: 14px; }
-  .avatar { width: 220px; }
 }
 
 /* ---------------------------------------------
@@ -144,9 +143,14 @@ a:focus-visible {
   gap: 32px;
 }
 
+/* stretches to the full height of the intro text beside it; the image is
+   absolutely positioned so the photo never dictates the row height */
 .avatar {
   flex: none;
-  width: 280px;
+  position: relative;
+  align-self: stretch;
+  width: min(440px, 44%);
+  min-height: 340px;
   border-radius: 16px;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -161,10 +165,13 @@ a:focus-visible {
 }
 
 .avatar img {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  height: auto;
+  height: 100%;
   display: block;
-  object-fit: contain;
+  object-fit: cover;
+  object-position: center 60%;
 }
 
 .hero-text {
@@ -196,20 +203,40 @@ h1 {
   font-size: 16px;
   line-height: 1.65;
   color: var(--text-dim);
-  max-width: 58ch;
+  max-width: 68ch;
 }
 
 .hero-intro a { color: var(--text); }
 .hero-intro a:hover { color: var(--accent); }
 
-@media (max-width: 600px) {
+/* Below this width there isn't room for a full-height photo beside the text --
+   side by side, the text column would narrow enough to grow several hundred
+   pixels taller, and the stretched photo would crop severely. Stack instead,
+   and restore the photo's own 3:4 aspect so it is never cropped. */
+@media (max-width: 1000px) {
   .hero {
     flex-direction: column;
+    align-items: flex-start;
+  }
+  .avatar {
+    align-self: flex-start;
+    width: min(360px, 62%);
+    aspect-ratio: 700 / 933;
+    min-height: 0;
+  }
+  .hero-text { padding-top: 0; }
+}
+
+@media (max-width: 600px) {
+  .hero {
     align-items: center;
     text-align: center;
   }
-  .avatar { width: 260px; margin: 0 auto; }
-  .hero-text { padding-top: 0; }
+  .avatar {
+    align-self: center;
+    width: min(300px, 78vw);
+    margin: 0 auto;
+  }
   .hero-intro { margin-left: auto; margin-right: auto; }
 }
 
