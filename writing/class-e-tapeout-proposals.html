@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Precision α/β Timing Control and Adaptive ZVS Control for Class-E Power Conversion — Prithvi Krishnaswamy</title>
+<meta name="description" content="Two analog tape-out project proposals in TSMC 180 nm CMOS: a fine-resolution Class-E α/β timing controller, and an adaptive ZVS phase-timing controller built on the same delay core.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+  <div class="grain"></div>
+
+  <nav class="topnav">
+    <a class="topnav-logo" href="../index.html#top">PK</a>
+    <div class="topnav-links">
+      <a href="../index.html#writing">← back to writing</a>
+    </div>
+  </nav>
+
+  <main class="article-wrap">
+
+    <header class="article-header">
+      <p class="role">analog tape-out project proposals</p>
+      <h1 class="article-title">Precision α/β Timing Control and Adaptive ZVS Control for Class-E Power Conversion</h1>
+      <p class="article-subtitle">TSMC 180 nm CMOS | 6.78–13.56 MHz target operating range</p>
+      <p class="article-lead">Prepared as a technical concept document for discussion with Prof. Jungwon Choi and the UW ECE analog tape-out team.</p>
+
+      <figure class="article-figure">
+        <img src="assets/class-e-relationship.png" alt="Diagram: Project 1 is a timing actuator generating precise alpha and beta; Project 2 is a closed-loop controller that detects error and adapts beta; both drive a shared Class-E power stage with external GaN and resonant network.">
+        <figcaption>The two concepts are intentionally related: Project 1 implements the precision timing actuator; Project 2 adds converter-state feedback and adaptive timing.</figcaption>
+      </figure>
+
+      <table class="meta-table">
+        <tr><th>Purpose</th><td>Identify and scope a power-electronics-oriented analog IC project for an ECE tape-out, sized comparably to prior UW analog tape-outs.</td></tr>
+        <tr><th>Audience</th><td>Prof. Jungwon Choi and the UW ECE analog tape-out team; HiPER Lab researchers.</td></tr>
+        <tr><th>Status</th><td>Draft for project selection — August 2026</td></tr>
+        <tr><th>Process</th><td>TSMC 180 nm CMOS</td></tr>
+        <tr><th>Prerequisite</th><td>Resonant power conversion basics and introductory analog IC design</td></tr>
+      </table>
+
+      <div class="toc">
+        <p class="toc-title">Table of contents</p>
+        <ol>
+          <li><a href="#executive-summary">Executive Summary</a></li>
+          <li><a href="#sec1">How the Project Space Was Chosen</a></li>
+          <li><a href="#sec2">Technical Background: Class-E Switching, α/β Control, and ZVS</a></li>
+          <li><a href="#sec3">Project 1 — Fine-Resolution α/β Class-E Timing-Control IC</a></li>
+          <li><a href="#sec4">Project 2 — Adaptive ZVS Timing Controller for a Self-Synchronized Class-E Rectifier</a></li>
+          <li><a href="#sec5">Direct Comparison and Recommended Project Framing</a></li>
+          <li><a href="#sec6">Suggested Design and Verification Plan</a></li>
+          <li><a href="#sec7">Questions to Resolve with Prof. Choi Before Freezing the Proposal</a></li>
+          <li><a href="#sec8">References</a></li>
+          <li><a href="#appendix-a">Appendix A — Recent IEEE Xplore Source Set Supplied for Review</a></li>
+          <li><a href="#appendix-b">Appendix B — One-Page Proposal Summary</a></li>
+        </ol>
+      </div>
+    </header>
+
+    <article class="article-body">
+
+      <h2 id="executive-summary">Executive Summary</h2>
+      <p><strong>Objective.</strong> Identify a power-electronics-oriented analog IC project that is technically meaningful to the UW High-frequency &amp; Intelligent Power Electronics Research Lab (HiPER Lab), but remains comparable in scope to prior UW analog tape-outs. The proposed chip should not attempt to integrate the high-voltage GaN power stage. Instead, it should integrate the timing, sensing, and control functions whose value increases as the converter switching period shrinks into the tens of nanoseconds.</p>
+      <p><strong>Recommended structure.</strong> Treat Project 1 as the lower-risk tape-out candidate and Project 2 as either an alternative proposal or a stretch architecture built on the same timing core. Project 1 generates programmable duty ratio α and phase delay β with fine time resolution. Project 2 closes a feedback loop around β so that the controller automatically aligns a Class-E switching event with a measured zero-voltage-switching (ZVS) condition.</p>
+
+      <p class="callout"><strong>Core recommendation:</strong> propose an integrated fine-resolution Class-E timing controller as the guaranteed tape-out, while presenting adaptive ZVS feedback as the research extension. This preserves a clean post-silicon test path even if a complete high-power Class-E test bench is not available when silicon returns.</p>
+
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <tr><th>Item</th><th>Project 1: α/β Timing IC</th><th>Project 2: Adaptive Class-E ZVS IC</th></tr>
+          <tr><td>Central idea</td><td>Generate precise Class-E gate timing from externally commanded α and β.</td><td>Measure switching-timing error and automatically adjust β toward ZVS.</td></tr>
+          <tr><td>Control type</td><td>Open-loop timing actuator / mixed-signal waveform generator.</td><td>Closed-loop event-driven controller.</td></tr>
+          <tr><td>Meaningful blocks</td><td>~5 core blocks; optional 6th calibration block.</td><td>~6 blocks when front-end, detector, loop and timing core are counted.</td></tr>
+          <tr><td>Primary innovation</td><td>Fine, low-jitter, PVT-aware delay generation in 180-nm CMOS.</td><td>Converter-state sensing + analog adaptation of the same delay core.</td></tr>
+          <tr><td>Risk</td><td>Low–medium.</td><td>Medium–high.</td></tr>
+          <tr><td>Best use</td><td>Primary tape-out proposal.</td><td>Alternative proposal or stretch goal.</td></tr>
+        </table>
+      </div>
+
+      <h2 id="sec1">1. How the Project Space Was Chosen</h2>
+
+      <h3>1.1 Start from the educational envelope of prior UW tape-outs</h3>
+      <p>The project-selection process began by looking at what previous tape-out teams actually built, rather than starting from an unconstrained power-electronics wish list. Several recurring patterns appear in the examples supplied:</p>
+      <ul>
+        <li>One dominant technical idea that can be explained in one sentence.</li>
+        <li>Roughly three to six circuit blocks, most of which are standard analog or mixed-signal building blocks.</li>
+        <li>One block or operating technique that carries most of the novelty and design exploration.</li>
+        <li>Metrics that are visible in schematic/post-layout simulation and can also be measured on returned silicon.</li>
+        <li>Large passives, high-voltage power devices, antennas, coils, matching networks, and other impractical structures are moved off-chip.</li>
+        <li>A custom PCB provides biasing, interfaces, external passives, and system-level demonstration.</li>
+      </ul>
+
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <tr><th>Precedent project</th><th>Representative on-chip blocks</th><th>Main “interesting” idea</th><th>Off-chip / test partition</th><th>Measurable outputs</th></tr>
+          <tr><td>Low-noise discontinuous instrumentation amplifier (2026)</td><td>Input amplifier, gain-boost stages, common-source stage, AB output, bias generator</td><td>Switched/discontinuous biasing to reduce flicker noise</td><td>PCB access to stages and bias/test nodes</td><td>Gain, noise, phase margin, power</td></tr>
+          <tr><td>Direct-VCO FM transmitter (2026)</td><td>PFD, charge pump, current-starved VCO, preamp, PA</td><td>Direct VCO modulation / PLL implementation</td><td>2nd-order loop filter, matching network, microphone coupling, antenna</td><td>Carrier accuracy, phase noise, output power, power</td></tr>
+          <tr><td>13.56-MHz active rectifier (2025)</td><td>Comparator, high-side switch, boost path, LDO/reference, protection/load switch</td><td>High-frequency active rectification / timing</td><td>Impedance match, coils, test source/load</td><td>Power-conversion efficiency across input power</td></tr>
+          <tr><td>Linearized N-path filter (2025)</td><td>Clock/bias generation, switch network, feedback path, TIA</td><td>Feedback-linearized N-path switching</td><td>RF source/load and test equipment</td><td>IIP3, SFDR, rejection, tuning</td></tr>
+          <tr><td>SAR ADC (2025)</td><td>Comparator/preamp, CDAC, bootstrap switch, SAR logic, clocking</td><td>Converter architecture + precision capacitor/switch design</td><td>Signal source and data capture</td><td>ENOB, SNDR, sample rate, INL/DNL</td></tr>
+        </table>
+      </div>
+
+      <p>This precedent matters because it suggests that a successful power-electronics tape-out should integrate a compact control/sensing function, not an entire high-power converter. The 2025 13.56-MHz active-rectifier project is especially strong precedent that high-frequency power conversion can be a valid tape-out topic when the high-energy and large-passive portions are partitioned off-chip.</p>
+
+      <figure class="article-figure">
+        <img src="assets/class-e-fig1-funnel.png" alt="Funnel diagram of the project-selection process used to narrow from broad power electronics topics to the proposed timing-control IC.">
+        <figcaption>Figure 1. Project-selection funnel used for these proposals.</figcaption>
+      </figure>
+
+      <h3>1.2 Match the chip function to HiPER Lab’s current research</h3>
+      <p>HiPER Lab describes its scope as high-frequency and advanced power electronics, including power-converter topologies, wireless power transfer, magnetic design, high-frequency control, data-driven modeling, energy-storage interfaces, and wide-bandgap devices [1]. The recent publications supplied for review reinforce several recurring themes:</p>
+      <ul>
+        <li>Class-E / Class-Φ₂ resonant conversion at multi-MHz switching frequencies.</li>
+        <li>GaN and SiC device behavior, including nonlinear capacitance, on-resistance, switching loss, parasitics, and high-frequency characterization.</li>
+        <li>13.56-MHz wireless power transfer and self-resonant coil design.</li>
+        <li>Control or modeling methods that preserve efficiency as operating conditions and device behavior change.</li>
+      </ul>
+      <p>The key observation is that these themes produce an IC-sized bottleneck: as switching frequency rises, nanoseconds of comparator, logic, or gate-driver delay become a nontrivial fraction of a switching period. Choi’s prior Class-E rectifier work directly studies this problem. A 2022 self-synchronized Class-E rectifier compensated an 8-ns combined comparator/driver delay at 13.56 MHz by sensing a leading-phase resonant-node voltage [5]. A separate 2022 WPT rectifier used an FPGA delay line to generate controllable synchronous timing [6]. The later α/β control work then used duty ratio and phase delay as explicit control degrees of freedom while accounting for nonlinear FET output capacitance [7], [8].</p>
+
+      <h3>1.3 Why 13.56 MHz makes timing an analog design problem</h3>
+      <p>At 13.56 MHz the switching period is only:</p>
+      <p class="equation">Tₛ = 1 / fₛ = 1 / 13.56 MHz ≈ 73.75 ns</p>
+      <p>Consequently, apparently small delays correspond to large phase errors:</p>
+
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <tr><th>Timing error</th><th>Fraction of 73.75-ns period</th><th>Equivalent phase</th></tr>
+          <tr><td>0.5 ns</td><td>0.68%</td><td>≈ 2.44°</td></tr>
+          <tr><td>1.0 ns</td><td>1.36%</td><td>≈ 4.88°</td></tr>
+          <tr><td>2.21 ns</td><td>3.0%</td><td>≈ 10.8°</td></tr>
+          <tr><td>8.0 ns</td><td>10.85%</td><td>≈ 39.1°</td></tr>
+        </table>
+      </div>
+
+      <p>This scaling is the central motivation for an IC implementation. A coarse digital controller that is adequate at hundreds of kilohertz can become a major timing limitation at 13.56 MHz. Conversely, a small 180-nm timing circuit can produce real system value without carrying power itself.</p>
+
+      <h2 id="sec2">2. Technical Background: Class-E Switching, α/β Control, and ZVS</h2>
+
+      <h3>2.1 Class-E soft switching</h3>
+      <p>Class-E converters shape the switch-node waveform with a resonant network so that switching occurs under soft-switching conditions. In an idealized Class-E inverter, the turn-on condition is designed so that the drain voltage is near zero and, in the canonical formulation, its slope is also near zero at the switching instant. A Class-E rectifier uses the reciprocal idea: the active rectifying device must be synchronized to the resonant waveform so that the conduction interval avoids hard switching and excessive reverse/diode-like conduction.</p>
+      <p>The switching-energy penalty associated with charging and discharging device output capacitance provides a useful first-order intuition. For a linear capacitance:</p>
+      <p class="equation">E_C ≈ ½ Cₒₛₛ V²    and    P_C ≈ fₛ E_C</p>
+      <p>For a real GaN FET, Cₒₛₛ is nonlinear, so a better expression is:</p>
+      <p class="equation">Eₒₛₛ(V) = ∫₀ⱽ v · Cₒₛₛ(v) dv</p>
+      <p>The 2025 Class-E modeling paper by Palmal and Choi is directly relevant because it develops models that better accommodate low R_on eGaN operation and distorted Class-E waveforms at 5 MHz [2]. The later α/β control literature explicitly notes that nonlinear Cₒₛₛ shifts the drain-voltage shape and can move the converter away from the intended ZVS region [7].</p>
+
+      <h3>2.2 Interpreting α and β</h3>
+      <p>For the proposed IC, α and β are treated as timing-control variables tied to a measured synchronization event. The exact normalization can follow the convention selected with Prof. Choi, but the implementation relationship is straightforward:</p>
+      <p class="equation">t_on = αTₛ</p>
+      <p class="equation">Δt_β = βTₛ   (if β is normalized to a cycle)</p>
+      <p class="equation">Δt_β = (β / 360°)Tₛ   (if β is expressed as phase angle)</p>
+      <p>Thus, α controls how long the gate pulse remains active and β controls where that pulse is positioned relative to the resonant synchronization reference. In Choi’s duty/phase work, adjusting these variables changes output power and determines whether operation remains in the desired high-efficiency/ZVS region [7], [8].</p>
+
+      <figure class="article-figure">
+        <img src="assets/class-e-fig2-timing.png" alt="Timing diagram showing the resonant synchronization reference, the phase delay beta positioning the gate pulse, and the duty ratio alpha setting the conduction interval.">
+        <figcaption>Figure 2. Conceptual timing interpretation. The exact reference polarity and α/β convention should be matched to the selected Class-E prototype.</figcaption>
+      </figure>
+
+      <h2 id="sec3">3. Project 1 — Fine-Resolution α/β Class-E Timing-Control IC</h2>
+
+      <h3>3.1 Problem statement</h3>
+      <p>High-frequency synchronous rectifiers need gate edges positioned with nanosecond-scale precision relative to a resonant waveform. Choi’s 2022 work demonstrated both propagation-delay compensation and an FPGA-based delay-line approach [5], [6]. The later duty/phase controller uses α and β as explicit control variables [7]. The tape-out opportunity is to convert the timing-sensitive portion of that laboratory control chain into a compact mixed-signal IC.</p>
+
+      <p class="callout"><strong>Research question:</strong> Can a 180-nm CMOS timing IC generate independently programmable Class-E phase delay (β) and duty ratio (α) at 6.78–13.56 MHz with ≲1-ns timing granularity and predictable PVT behavior?</p>
+
+      <h3>3.2 Proposed architecture</h3>
+
+      <figure class="article-figure">
+        <img src="assets/class-e-fig3-project1.png" alt="Block diagram of Project 1: sync input conditioner, coarse and fine beta delay line, alpha pulse-width generator, bias and references, and output pre-driver, with the power stage and resonant network off-chip.">
+        <figcaption>Figure 3. Proposed architecture for Project 1. The power stage, gate driver, resonant network, coils, and high-voltage sensing remain off-chip.</figcaption>
+      </figure>
+
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <tr><th>Block</th><th>Function</th><th>Why it belongs on-chip</th><th>Design emphasis</th></tr>
+          <tr><td>1. Sync input conditioner / comparator</td><td>Convert a low-voltage resonant timing reference into a clean CMOS edge.</td><td>Propagation delay and input overdrive directly affect phase accuracy.</td><td>Low delay dispersion, controlled hysteresis, input common-mode compatibility.</td></tr>
+          <tr><td>2. Coarse + fine β delay line</td><td>Shift the synchronization edge by a commanded phase delay.</td><td>This is the time-critical function that benefits most from custom silicon.</td><td>Resolution, monotonicity, jitter, PVT sensitivity.</td></tr>
+          <tr><td>3. α pulse-width generator</td><td>Create the desired conduction interval from the delayed edge.</td><td>Duty ratio is the second control axis in Choi’s Class-E control work.</td><td>Pulse-width accuracy, minimum pulse width, rise/fall symmetry.</td></tr>
+          <tr><td>4. Bias / references</td><td>Generate stable currents/voltages for delay cells and comparators.</td><td>Analog delay is only useful if control variables are repeatable.</td><td>Temperature coefficient, startup, supply sensitivity.</td></tr>
+          <tr><td>5. Output pre-driver</td><td>Provide a clean CMOS output to an external high-current gate driver.</td><td>Avoids forcing the 180-nm chip to drive a GaN gate directly.</td><td>Edge symmetry, capacitive load tolerance.</td></tr>
+          <tr><td>6. Optional calibration</td><td>Trim coarse/fine delay gain or reference a known interval.</td><td>Reduces PVT spread without making calibration mandatory for first silicon.</td><td>Simple foreground trim or DLL-style extension.</td></tr>
+        </table>
+      </div>
+
+      <h3>3.3 Central analog block: controllable delay</h3>
+      <p>A current-starved delay cell is one plausible 180-nm implementation because propagation delay can be tuned through a bias current. To first order, the delay required to charge/discharge a node capacitance is:</p>
+      <p class="equation">t_pd ≈ C_L · ΔV / I_ctrl</p>
+      <p>Therefore the delay sensitivity is approximately:</p>
+      <p class="equation">K_d = ∂t_pd / ∂I_ctrl ≈ −C_L · ΔV / I_ctrl²</p>
+      <p>A practical implementation can separate range from resolution: digital coarse selection chooses one of several delay taps, while a fine analog-controlled cell interpolates within the selected interval. This reduces the control range demanded from any single transistor operating point and gives the project a clear mixed-signal identity rather than becoming only an RTL delay generator.</p>
+      <p>For a code-controlled delay, the measured delay-line quality can be expressed with familiar converter-style metrics:</p>
+      <p class="equation">DNL[k] = (t[k+1] − t[k]) / LSB_ideal − 1</p>
+      <p class="equation">INL[k] = (t[k] − t_ideal[k]) / LSB_ideal</p>
+
+      <h3>3.4 Preliminary specifications and success metrics</h3>
+      <p>The following are proposal-level targets, not final commitments. They should be adjusted after reviewing the TSMC 180-nm PDK, pad/interface constraints, and the α–β operating map of the HiPER Lab converter chosen for demonstration.</p>
+
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <tr><th>Metric</th><th>Initial target</th><th>Rationale / measurement</th></tr>
+          <tr><td>Operating frequency</td><td>6.78–13.56 MHz</td><td>Covers common resonant WPT bands and the 13.56-MHz Class-E literature.</td></tr>
+          <tr><td>Fine β timing resolution</td><td>≤ 1 ns goal; 0.5 ns stretch</td><td>At 13.56 MHz, 1 ns ≈ 4.88° and 0.5 ns ≈ 2.44°.</td></tr>
+          <tr><td>Programmable β range</td><td>≥ 20 ns, preferably wider with coarse taps</td><td>20 ns spans ~98° at 13.56 MHz.</td></tr>
+          <tr><td>α duty range</td><td>Approx. 20–80%, refined from converter operating map</td><td>Wide enough for characterization without claiming converter-optimal extremes.</td></tr>
+          <tr><td>Delay monotonicity</td><td>Monotonic across code; characterize DNL/INL</td><td>Directly supports repeatable research sweeps.</td></tr>
+          <tr><td>RMS edge jitter</td><td>Characterize; stretch goal &lt; 0.25 ns</td><td>Jitter should be meaningfully below one timing LSB.</td></tr>
+          <tr><td>Core power</td><td>&lt; 10 mW target, excluding external gate driver</td><td>Consistent with analog-capstone scale and avoids unnecessary power.</td></tr>
+          <tr><td>PVT characterization</td><td>Process corners, supply sweep, temperature sweep, Monte Carlo</td><td>The research value comes from knowing timing uncertainty, not only nominal operation.</td></tr>
+        </table>
+      </div>
+
+      <h3>3.5 Research utility to HiPER Lab</h3>
+      <ul>
+        <li>Turns α/β into directly programmable hardware variables rather than relying on a high-end function generator or coarse digital timing.</li>
+        <li>Can be reused in Class-E rectifier, inverter, and WPT experiments as a timing actuator even when the high-power topology changes.</li>
+        <li>Creates a calibrated platform for sweeping phase and duty while measuring efficiency, ZVS boundary, output power, and device stress.</li>
+        <li>Separates the research loop: a PC can still compute the desired α/β operating point, while the IC performs the nanosecond-critical waveform generation locally.</li>
+        <li>Provides measured silicon data on delay linearity, jitter, comparator delay, and PVT sensitivity that is difficult to obtain from an abstract FPGA timing model.</li>
+      </ul>
+
+      <h3>3.6 Post-silicon test plan</h3>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <tr><th>Phase</th><th>Bench setup</th><th>Measurements</th><th>Pass criterion</th></tr>
+          <tr><td>A. Standalone timing characterization</td><td>Function generator → sync input; static/DAC control of α/β; high-bandwidth oscilloscope on output</td><td>Delay vs. code, pulse width vs. code, jitter, supply/temp sensitivity</td><td>Chip generates monotonic, stable, repeatable timing over target frequency range.</td></tr>
+          <tr><td>B. External-driver compatibility</td><td>ASIC → commercial gate driver input or representative capacitive load</td><td>Edge integrity, duty distortion, loading sensitivity</td><td>No major timing corruption from expected external interface load.</td></tr>
+          <tr><td>C. Class-E demonstration</td><td>Conditioned resonant sync → ASIC → external driver → low/medium-power Class-E stage</td><td>Efficiency/output power vs. α/β; reproduce selected operating points</td><td>Timing IC can command meaningful converter operating points.</td></tr>
+        </table>
+      </div>
+
+      <h3>3.7 Main risks and mitigations</h3>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <tr><th>Risk</th><th>Why it matters</th><th>Mitigation</th></tr>
+          <tr><td>PVT drift of analog delay</td><td>A 20–30% delay shift could erase the intended precision.</td><td>Coarse/fine partition; bias reference; post-silicon calibration table; optional trim.</td></tr>
+          <tr><td>Comparator delay depends on input overdrive</td><td>Sync edge moves as sensed waveform amplitude changes.</td><td>Specify input amplitude range; characterize overdrive dispersion; use controlled hysteresis or preconditioning.</td></tr>
+          <tr><td>Timing IC becomes “too digital”</td><td>Could weaken analog-design learning objectives.</td><td>Make fine delay, biasing, comparator behavior, and jitter/PVT analysis central to the project.</td></tr>
+          <tr><td>System demo unavailable</td><td>Full WPT hardware may not be ready when silicon returns.</td><td>Standalone scope-based timing validation is sufficient to verify the chip.</td></tr>
+        </table>
+      </div>
+
+      <h3>3.8 Tape-out scope check</h3>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <tr><th>Tape-out criterion</th><th>Fit</th></tr>
+          <tr><td>One central technical idea</td><td>Excellent: precise multi-MHz Class-E gate timing.</td></tr>
+          <tr><td>3–6 meaningful blocks</td><td>Excellent: 5 core blocks, optional 6th calibration block.</td></tr>
+          <tr><td>Standard blocks + one interesting block</td><td>Excellent: comparator/bias/buffer are standard; fine delay is the main research block.</td></tr>
+          <tr><td>Obvious metrics</td><td>Excellent: delay resolution/range, DNL/INL, jitter, duty error, PVT, power.</td></tr>
+          <tr><td>Off-chip where unreasonable</td><td>Excellent: GaN, gate driver, resonant passives, coils and HV sensing remain off-chip.</td></tr>
+          <tr><td>Small PCB afterward</td><td>Excellent: a simple timing-characterization board is sufficient for first validation.</td></tr>
+          <tr><td>TSMC 180-nm fit</td><td>Strong, assuming required low-voltage devices and pad I/O are available.</td></tr>
+        </table>
+      </div>
+
+      <h2 id="sec4">4. Project 2 — Adaptive ZVS Timing Controller for a Self-Synchronized Class-E Rectifier</h2>
+
+      <h3>4.1 How this differs from Project 1</h3>
+      <p>Project 1 is a precision timing actuator: external logic or a researcher decides α and β, and the chip generates the requested waveform. Project 2 adds a physical feedback variable from the converter. It detects whether the Class-E switching event is early or late relative to the desired drain-voltage minimum/zero crossing and adjusts β until the switching event converges toward ZVS. In control notation:</p>
+      <p class="equation">Project 1: (α_cmd, β_cmd, sync) → gate waveform</p>
+      <p class="equation">Project 2: converter waveform → ZVS timing error → β adaptation → gate waveform</p>
+
+      <p class="callout"><strong>Research question:</strong> Can an event-driven mixed-signal loop adapt the Class-E phase delay β so that the switching edge remains aligned to a measured ZVS event despite propagation delay, PVT variation, load movement, and changes in the resonant waveform?</p>
+
+      <h3>4.2 Making “adaptive ZVS” specifically Class-E</h3>
+      <p>A generic “adaptive ZVS controller” is too broad because different resonant topologies define the sensed state and control variable differently. The Class-E-specific version should explicitly use the synchronization and timing structure already present in Choi’s rectifier work:</p>
+      <ul>
+        <li>Use a resonant current/voltage zero-crossing or leading-phase node as the cycle synchronization reference, as in the self-synchronized Class-E rectifier literature [5].</li>
+        <li>Treat β as the primary adapted state: it moves the gate event relative to that resonant reference.</li>
+        <li>Hold α fixed or externally programmable during first-silicon closed-loop operation. This avoids a two-dimensional α/β optimization problem inside the chip.</li>
+        <li>Observe a conditioned representation of VDS (or a derived zero/minimum-voltage event) to determine whether the gate edge occurred before or after the desired Class-E switching condition.</li>
+        <li>Keep the high-voltage drain sensing network and GaN gate driver off-chip; the ASIC receives only PDK-safe low-voltage signals.</li>
+      </ul>
+
+      <figure class="article-figure">
+        <img src="assets/class-e-fig4-project2.png" alt="Block diagram of Project 2: resonant synchronization front-end, ZVS early-late detector, charge pump and loop filter, voltage-controlled beta delay line, alpha pulse-width generator, and output pre-driver, with high-voltage sensing off-chip.">
+        <figcaption>Figure 4. Proposed Class-E-specific adaptive-ZVS architecture. The feedback loop adjusts β; α remains externally set for the first version.</figcaption>
+      </figure>
+
+      <h3>4.3 Proposed circuit blocks</h3>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <tr><th>Block</th><th>Function</th><th>Technical content</th></tr>
+          <tr><td>1. Resonant synchronization front-end</td><td>Generate a repeatable cycle reference from a conditioned current/voltage signal.</td><td>Comparator delay, hysteresis, input overdrive, noise immunity.</td></tr>
+          <tr><td>2. ZVS timing / early-late detector</td><td>Compare the gate timing with a conditioned VDS zero/minimum event.</td><td>Window/threshold comparators or PFD-like event timing; false-detection robustness.</td></tr>
+          <tr><td>3. Charge pump + loop filter</td><td>Integrate early/late events into an analog β control state.</td><td>Charge-pump mismatch, leakage, loop dynamics, capacitor sizing.</td></tr>
+          <tr><td>4. Voltage-controlled / programmable β delay line</td><td>Move the switching edge in response to the loop state.</td><td>Same central delay-cell design as Project 1.</td></tr>
+          <tr><td>5. α pulse-width generator</td><td>Set the rectifier conduction interval while β adapts.</td><td>Externally programmable or fixed during initial closed-loop tests.</td></tr>
+          <tr><td>6. Output pre-driver + bias</td><td>Interface to external gate driver and provide analog bias.</td><td>Drive integrity, power, bias stability.</td></tr>
+        </table>
+      </div>
+
+      <h3>4.4 Control-law and loop mathematics</h3>
+      <p>A simple and tape-out-friendly implementation is a bang-bang or event-driven phase loop. Let e[n] indicate whether the commanded gate edge occurs before or after the detected VDS zero/minimum event in cycle n:</p>
+      <p class="equation">e[n] ∈ {−1, 0, +1}</p>
+      <p>The loop then updates the phase command in the direction that reduces the timing error:</p>
+      <p class="equation">β[n+1] = β[n] − Kβ · e[n]</p>
+      <p>In an analog charge-pump implementation, the control-voltage increment is set by the charge deposited on the loop capacitor:</p>
+      <p class="equation">ΔVβ ≈ I_CP · Δt_UP/DN / C_LF</p>
+      <p>If the delay line has voltage-to-time sensitivity K_VCDL = ∂tβ/∂Vβ, the approximate timing correction per event is:</p>
+      <p class="equation">Δtβ ≈ K_VCDL · ΔVβ</p>
+      <p>These relations provide concrete design knobs: charge-pump current controls adaptation speed, loop capacitance controls noise filtering and step size, and delay-line gain controls capture range. The exact loop can remain deliberately slow relative to 13.56 MHz because load and operating-point changes occur over many switching cycles; the high-speed requirement is in event detection and gate-edge generation, not in a high-bandwidth analog error amplifier.</p>
+
+      <h3>4.5 High-voltage sensing partition</h3>
+      <p>The ASIC should not be connected directly to a tens- or hundreds-of-volts GaN drain node. A dedicated off-chip divider/attenuator/clamp, isolated probe interface, or low-voltage auxiliary sensing node should generate a safe signal. This keeps the project inside the capabilities of the course PDK and avoids turning the tape-out into a high-voltage device-design project.</p>
+
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <tr><th>On chip</th><th>Off chip</th></tr>
+          <tr><td>Low-voltage sync comparator</td><td>GaN power FET</td></tr>
+          <tr><td>Low-voltage VDS/event comparator</td><td>Gate driver / level shifting</td></tr>
+          <tr><td>Early/late detector</td><td>HV attenuation / clamp / isolation</td></tr>
+          <tr><td>Charge pump / loop capacitor if practical</td><td>Resonant inductors/capacitors and WPT coils</td></tr>
+          <tr><td>Variable delay + α generator</td><td>Power source, load, thermal hardware</td></tr>
+        </table>
+      </div>
+
+      <h3>4.6 Preliminary specifications and success metrics</h3>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <tr><th>Metric</th><th>Initial target / characterization goal</th><th>Why it matters</th></tr>
+          <tr><td>Operating frequency</td><td>Nominal 13.56 MHz; 6.78 MHz secondary target</td><td>Matches HiPER Lab resonant/WPT work.</td></tr>
+          <tr><td>β delay range</td><td>At least ±10 ns around nominal alignment, preferably using coarse/fine control</td><td>Must cover sensor + driver delay and operating variation.</td></tr>
+          <tr><td>Steady-state timing error</td><td>≤ 1 ns goal under nominal test conditions</td><td>Corresponds to ≈4.88° at 13.56 MHz.</td></tr>
+          <tr><td>Capture / convergence</td><td>Demonstrate monotonic convergence from intentionally early and late initial conditions</td><td>Primary proof that feedback—not manual tuning—is working.</td></tr>
+          <tr><td>False early/late rate</td><td>Characterize versus sense amplitude/noise</td><td>A noisy detector can create timing chatter and switching loss.</td></tr>
+          <tr><td>Loop stability / limit cycle</td><td>Bound timing dither around lock; characterize cycle-to-cycle variation</td><td>Bang-bang loops naturally dither; this must be small relative to the ZVS window.</td></tr>
+          <tr><td>Power</td><td>&lt; 10–15 mW target excluding external gate driver</td><td>Keeps controller overhead negligible in lab-scale power stages.</td></tr>
+        </table>
+      </div>
+
+      <h3>4.7 Research utility and advantages</h3>
+      <ul>
+        <li>Automatically compensates delay drift rather than requiring a one-time manually selected β code.</li>
+        <li>Can track shifts in the desired switching instant caused by load, coupling, device capacitance, temperature, or external driver variation.</li>
+        <li>Provides an experimentally reusable platform for studying the boundary between non-ZVS, ZVS, and excess reverse-conduction regions.</li>
+        <li>Moves the architecture toward a truly self-contained Class-E controller rather than a function-generator-driven experiment.</li>
+        <li>Creates a natural path to later two-variable α/β optimization: first close β around ZVS, then let a slower outer loop command α for power regulation.</li>
+      </ul>
+
+      <h3>4.8 Post-silicon test plan</h3>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <tr><th>Phase</th><th>Method</th><th>What is proven</th></tr>
+          <tr><td>A. Synthetic early/late test</td><td>Two phase-shifted function-generator signals emulate sync and VDS events. Sweep initial phase and observe β control.</td><td>The event detector, charge pump, loop and variable delay converge without any high-voltage hardware.</td></tr>
+          <tr><td>B. Conditioned waveform replay</td><td>Feed recorded/synthesized Class-E-like waveforms through the front end.</td><td>Robustness to waveform slope, amplitude and distortion.</td></tr>
+          <tr><td>C. Low-power Class-E loop closure</td><td>Use safe off-chip sensing from an actual Class-E stage.</td><td>The controller moves the gate edge toward the observed ZVS boundary.</td></tr>
+          <tr><td>D. Research characterization</td><td>Sweep load/coupling/temp and compare fixed β vs. adaptive β.</td><td>Quantifies whether adaptation reduces manual retuning and preserves efficiency.</td></tr>
+        </table>
+      </div>
+
+      <h3>4.9 Main risks and mitigations</h3>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <tr><th>Risk</th><th>Failure mode</th><th>Mitigation / de-risking</th></tr>
+          <tr><td>Ambiguous ZVS detector</td><td>VDS threshold crossing may not uniquely distinguish early vs. late timing.</td><td>Prototype the sensing rule in simulation and on a bench first; use PFD/event-order detection rather than only an amplitude threshold.</td></tr>
+          <tr><td>Loop oscillation / limit cycle</td><td>Controller hunts around ZVS and adds jitter.</td><td>Slow adaptation, deadband/window detector, adjustable charge-pump current.</td></tr>
+          <tr><td>HV interface dominates project</td><td>Protection and common-mode problems overwhelm analog timing work.</td><td>Move HV scaling/isolation off-chip and define a strict safe input specification for the ASIC.</td></tr>
+          <tr><td>Too much scope</td><td>Detector + loop + delay + pulse generator becomes schedule risk.</td><td>Reuse the Project-1 timing core; hold α external; make calibration optional.</td></tr>
+        </table>
+      </div>
+
+      <h3>4.10 Tape-out scope check</h3>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <tr><th>Tape-out criterion</th><th>Fit</th></tr>
+          <tr><td>One central technical idea</td><td>Strong: adapt Class-E phase timing to a measured ZVS event.</td></tr>
+          <tr><td>3–6 meaningful blocks</td><td>Strong but at upper end: ~6 blocks.</td></tr>
+          <tr><td>Standard blocks + one interesting block</td><td>Strong: comparators/charge pump/bias are standard; closed-loop event timing + VCDL is the interesting core.</td></tr>
+          <tr><td>Obvious metrics</td><td>Strong: steady-state timing error, convergence, jitter/limit cycle, capture range, power.</td></tr>
+          <tr><td>Off-chip where unreasonable</td><td>Essential and feasible: all HV sensing and power hardware remain off-chip.</td></tr>
+          <tr><td>Small PCB afterward</td><td>Feasible, but a converter demo board is more involved than Project 1.</td></tr>
+          <tr><td>TSMC 180-nm fit</td><td>Strong for low-voltage controller; system integration is the main risk, not transistor capability.</td></tr>
+        </table>
+      </div>
+
+      <h2 id="sec5">5. Direct Comparison and Recommended Project Framing</h2>
+
+      <figure class="article-figure">
+        <img src="assets/class-e-relationship.png" alt="Diagram: Project 1 as timing actuator and Project 2 as closed-loop controller, both connected to a shared Class-E power stage with external GaN and resonant network.">
+        <figcaption>Figure 5. Project 2 can be built conceptually on top of the timing actuator developed for Project 1.</figcaption>
+      </figure>
+
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <tr><th>Decision factor</th><th>Project 1</th><th>Project 2</th></tr>
+          <tr><td>Course/tape-out risk</td><td>Lower</td><td>Higher</td></tr>
+          <tr><td>Research novelty</td><td>Moderate–high</td><td>High</td></tr>
+          <tr><td>Standalone silicon testability</td><td>Excellent</td><td>Excellent if synthetic event inputs are included</td></tr>
+          <tr><td>Dependence on power-converter hardware</td><td>Low</td><td>Medium</td></tr>
+          <tr><td>Analog design depth</td><td>High if fine delay/bias/jitter are emphasized</td><td>High: comparators + charge pump + loop + VCDL</td></tr>
+          <tr><td>Direct connection to Choi control work</td><td>Very strong</td><td>Very strong</td></tr>
+          <tr><td>Potential lab reuse</td><td>Timing/sweep infrastructure</td><td>Self-contained adaptive controller</td></tr>
+          <tr><td>Recommended role</td><td>Primary proposal / minimum viable chip</td><td>Alternative proposal or stretch path</td></tr>
+        </table>
+      </div>
+
+      <p>Recommended title for the primary tape-out proposal: “A Fine-Resolution Duty-and-Phase Timing IC for 13.56-MHz Self-Synchronized Class-E Rectifiers.”</p>
+      <p>Recommended title for the more ambitious proposal: “An Adaptive Phase-Timing Controller for ZVS Operation of a 13.56-MHz Self-Synchronized Class-E Rectifier.”</p>
+
+      <p class="callout"><strong>Best project hierarchy:</strong> tape out the α/β timing engine as the guaranteed deliverable; reserve pads and architecture hooks so that an adaptive β loop can be included if schematic/layout schedule permits. This mirrors successful capstone practice: one central idea with a safe verification path, plus one ambitious research extension.</p>
+
+      <h2 id="sec6">6. Suggested Design and Verification Plan</h2>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <tr><th>Stage</th><th>Project 1 tasks</th><th>Project 2 additional tasks</th></tr>
+          <tr><td>1. System definition</td><td>Obtain α/β range from target converter; finalize input/output levels; select delay architecture.</td><td>Define exact ZVS event and early/late rule; choose safe sensing interface.</td></tr>
+          <tr><td>2. Behavioral modeling</td><td>Model code-to-delay and α pulse generation; define jitter/PVT budget.</td><td>Model bang-bang/charge-pump loop and capture range in Python/Matlab/Verilog-A.</td></tr>
+          <tr><td>3. Block design</td><td>Comparator, bias, delay cells, pulse generator, pre-driver.</td><td>ZVS event detector, charge pump, loop filter.</td></tr>
+          <tr><td>4. Block verification</td><td>Corners, Monte Carlo, delay linearity, pulse-width accuracy, jitter.</td><td>False detection, loop convergence, dither, detector offset.</td></tr>
+          <tr><td>5. Top-level integration</td><td>Padframe, control interface, test muxes, calibration hooks.</td><td>Synthetic-event test mode to validate loop without a converter.</td></tr>
+          <tr><td>6. Layout/post-layout</td><td>Parasitic-aware delay matching; extracted timing verification.</td><td>Symmetric charge pump/detector layout; feedback stability with extracted delay.</td></tr>
+          <tr><td>7. PCB/post-silicon</td><td>Function generator + scope timing board; optional Class-E driver interface.</td><td>Add conditioned VDS/event input and optional low-power Class-E stage.</td></tr>
+        </table>
+      </div>
+
+      <h2 id="sec7">7. Questions to Resolve with Prof. Choi Before Freezing the Proposal</h2>
+      <ul>
+        <li>Which existing HiPER Lab Class-E rectifier or inverter is the most realistic post-silicon host platform?</li>
+        <li>What α and β ranges are actually used in the current converter operating map?</li>
+        <li>Would a programmable timing actuator alone be useful to the lab, or is automatic ZVS adaptation required to create meaningful research value?</li>
+        <li>What synchronization signal is already available at safe voltage: coil voltage, current-sense signal, Cs–Ls node, or another auxiliary node?</li>
+        <li>For adaptive ZVS, what observable waveform best distinguishes early vs. late switching in the specific rectifier topology?</li>
+        <li>What is the external gate-driver propagation delay and how much does it vary with temperature, supply, and load?</li>
+        <li>Does the course TSMC 180-nm PDK provide only nominal 1.8-V devices, or are thicker-oxide I/O devices available for a wider interface range?</li>
+        <li>How much pad area and digital configuration infrastructure (scan chain / SPI / parallel bits) are available to the team?</li>
+      </ul>
+
+      <h2 id="sec8">8. References</h2>
+      <ol class="reference-list">
+        <li><span class="ref-num">[1]</span> UW High-frequency &amp; Intelligent Power Electronics Research Lab (HiPER Lab), “Research overview,” University of Washington, 2026. <a href="https://sites.google.com/uw.edu/hiperlab/" target="_blank" rel="noopener">sites.google.com/uw.edu/hiperlab</a></li>
+        <li><span class="ref-num">[2]</span> M. Palmal and J. Choi, “Advanced Modeling Technique of Class-E Inverter Considering Low R_on of eGaN FETs and Different Design Procedures,” 2025 IEEE Applied Power Electronics Conference and Exposition (APEC), 2025. DOI: 10.1109/APEC48143.2025.10977507.</li>
+        <li><span class="ref-num">[3]</span> M. Palmal, J. Hu, G. Siadari, E. Kim, and J. Choi, “Analysis and Design Optimization of Paralleled Class-Φ₂ Inverters for High-Frequency and High-Power Applications,” 2025 IEEE Energy Conversion Congress and Exposition (ECCE), 2025. DOI: 10.1109/ECCE58356.2025.11260286.</li>
+        <li><span class="ref-num">[4]</span> J. Hu and J. Choi, “Design and Validation of a 1MHz Double-pulse Test (DPT) Methodology for 900V SiC MOSFET,” 2026 IEEE Applied Power Electronics Conference and Exposition (APEC), 2026. DOI: 10.1109/APEC51134.2026.11516785.</li>
+        <li><span class="ref-num">[5]</span> M. Kim and J. Choi, “Self-Synchronized Class E Resonant Rectifier by Compensating Propagation Delay for Multi-MHz Switching Applications,” IEEE Transactions on Power Electronics, vol. 37, no. 11, pp. 13946–13954, 2022. DOI: 10.1109/TPEL.2022.3182346.</li>
+        <li><span class="ref-num">[6]</span> K. Sawant, N. Bich, and J. Choi, “Synchronous Rectification Based on a Digital Delay Line in a High-Frequency Resonant Converter for Wireless Power Transfer,” 2022 IEEE Energy Conversion Congress and Exposition (ECCE), 2022. DOI: 10.1109/ECCE50734.2022.9948204.</li>
+        <li><span class="ref-num">[7]</span> M. Kim and J. Choi, “Duty and Phase Control of a Class E Rectifier with Nonlinear Capacitance of FETs,” 2023 IEEE Energy Conversion Congress and Exposition (ECCE), 2023. DOI: 10.1109/ECCE53617.2023.10362104.</li>
+        <li><span class="ref-num">[8]</span> M. Kim and J. Choi, “Duty and Phase Control of a Self-Synchronized Class E Rectifier for High-Frequency Wireless Power Transfer System,” IEEE Transactions on Power Electronics, vol. 40, no. 4, pp. 6296–6306, 2025. DOI: 10.1109/TPEL.2024.3515953.</li>
+        <li><span class="ref-num">[9]</span> G. Siadari and J. Choi, “Modeling and Optimization of MHz Self-Resonant Planar Coil for Wireless Power Transfer,” 2026 IEEE Applied Power Electronics Conference and Exposition (APEC), 2026; 13.56-MHz prototype coil work reported by UW/HiPER Lab.</li>
+        <li><span class="ref-num">[10]</span> W. Larson, R. Adan, and K. Q. To, “Low-Noise Discontinuous Instrumentation Amplifier for Biomedical Signals using 180nm Silicon Technology,” UW ECE Research Showcase poster, 2026.</li>
+        <li><span class="ref-num">[11]</span> C. Sweeney, B. Kim, S. Christopher, and E. Wilson, “Direct VCO Modulating FM Transmitter,” UW ECE Research Showcase poster, 2026.</li>
+        <li><span class="ref-num">[12]</span> W. Larsen, C. Kennedy, and S. Zeng, “Scalable Energy Harvesting from the NFC Band: A 13.56 MHz Active Rectifier Adaptable for Low-Power Systems,” UW ECE ENGINE Showcase poster, 2025.</li>
+        <li><span class="ref-num">[13]</span> E. Karapepera and H. Wang, “Linearized N-Path Filter Chip Design for Mixer First Receiver,” UW ECE Research Showcase poster, 2025.</li>
+        <li><span class="ref-num">[14]</span> K. Tran, J. Wu, D. Wu, B. Kim, and H. Lam, “SAR ADC for Mobile Wireless Communication,” UW ECE ENGINE Showcase poster, 2025.</li>
+      </ol>
+
+      <h2 id="appendix-a">Appendix A — Recent IEEE Xplore Source Set Supplied for Review</h2>
+      <p>The following IEEE Xplore document links were supplied as Choi’s recent publication set. Three were independently resolved by title and are referenced above; the remaining links are preserved here so the proposal can be updated with exact bibliographic metadata if needed before submission.</p>
+      <ul>
+        <li><a href="https://ieeexplore.ieee.org/abstract/document/10977507" target="_blank" rel="noopener">ieeexplore.ieee.org/abstract/document/10977507</a></li>
+        <li><a href="https://ieeexplore.ieee.org/abstract/document/11646953" target="_blank" rel="noopener">ieeexplore.ieee.org/abstract/document/11646953</a></li>
+        <li><a href="https://ieeexplore.ieee.org/abstract/document/11260286" target="_blank" rel="noopener">ieeexplore.ieee.org/abstract/document/11260286</a></li>
+        <li><a href="https://ieeexplore.ieee.org/abstract/document/11516785" target="_blank" rel="noopener">ieeexplore.ieee.org/abstract/document/11516785</a></li>
+        <li><a href="https://ieeexplore.ieee.org/abstract/document/11516749" target="_blank" rel="noopener">ieeexplore.ieee.org/abstract/document/11516749</a></li>
+      </ul>
+
+      <h2 id="appendix-b">Appendix B — One-Page Proposal Summary</h2>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <tr><th></th><th>Project 1</th><th>Project 2</th></tr>
+          <tr><td>Problem</td><td>Nanosecond-resolution Class-E timing is cumbersome with bench/FPGA control at 13.56 MHz.</td><td>Fixed timing drifts away from ZVS as propagation delay and converter waveform change.</td></tr>
+          <tr><td>IC contribution</td><td>Generate α and β precisely.</td><td>Sense early/late ZVS timing and adapt β automatically.</td></tr>
+          <tr><td>Key block</td><td>Coarse/fine controllable delay line.</td><td>ZVS event detector + charge-pump-controlled delay line.</td></tr>
+          <tr><td>External hardware</td><td>Gate driver, GaN, resonant network, coils, HV sensing.</td><td>Same, plus conditioned VDS/event feedback.</td></tr>
+          <tr><td>Best primary metric</td><td>≤1-ns delay resolution + characterized PVT/jitter.</td><td>≤1-ns steady-state timing error + reliable convergence.</td></tr>
+          <tr><td>Scope verdict</td><td>Excellent primary tape-out.</td><td>Good but riskier; strongest as extension.</td></tr>
+        </table>
+      </div>
+
+    </article>
+
+    <footer class="article-footer">
+      <p>Written by <a href="../index.html#top">Prithvi Krishnaswamy</a> · August 2026</p>
+    </footer>
+
+  </main>
+
+</body>
+</html>

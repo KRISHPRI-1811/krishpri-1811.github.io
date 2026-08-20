@@ -584,6 +584,61 @@ h1 {
 }
 .data-table td { color: var(--text-dim); }
 
+/* Diagrams exported from documents have light backgrounds, so they sit on a
+   light panel rather than fighting the dark page. */
+.article-figure {
+  margin: 8px 0 28px;
+}
+.article-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #fbfaf8;
+  padding: 12px;
+}
+.article-figure figcaption {
+  margin-top: 10px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text-faint);
+}
+
+.callout {
+  margin: 8px 0 24px;
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent-dim);
+  border-radius: 8px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--text-dim);
+}
+.callout strong { color: var(--text); }
+
+.reference-list {
+  list-style: none;
+  margin: 0 0 16px;
+  padding-left: 0;
+  color: var(--text-dim);
+  font-size: 14.5px;
+  line-height: 1.65;
+}
+.reference-list li {
+  margin-bottom: 12px;
+  padding-left: 42px;
+  text-indent: -42px;
+}
+.ref-num {
+  display: inline-block;
+  width: 34px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--text-faint);
+}
+
 .article-footer {
   margin-top: 64px;
   padding-top: 24px;
@@ -598,4 +653,5 @@ h1 {
 @media (max-width: 560px) {
   .article-title { font-size: 28px; }
   .meta-table th { width: 110px; }
+  .article-figure img { padding: 8px; }
 }
