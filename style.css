@@ -589,14 +589,15 @@ h1 {
 .article-figure {
   margin: 8px 0 28px;
 }
+/* No padding or border: with box-sizing: border-box those would inset the
+   picture, leaving it narrower than the paragraphs. The image spans the text
+   column exactly. */
 .article-figure img {
   display: block;
   width: 100%;
   height: auto;
   border-radius: 10px;
-  border: 1px solid var(--border);
   background: #fbfaf8;
-  padding: 12px;
 }
 .article-figure figcaption {
   margin-top: 10px;
@@ -653,5 +654,4 @@ h1 {
 @media (max-width: 560px) {
   .article-title { font-size: 28px; }
   .meta-table th { width: 110px; }
-  .article-figure img { padding: 8px; }
 }
